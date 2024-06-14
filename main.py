@@ -86,14 +86,14 @@ def add_xml_to_plays(index, plays):
     root = tree.getroot()
 
     for child in root:
-        for i in range(int(child.attrib['quantity'])):
+        for _i in range(int(child.attrib['quantity'])):
             name = child[0].attrib['name']
             date = child.attrib['date']
             plays.append(Play(date, name))
 
 
 def count_per_game_from_plays(plays):
-    count_per_game = dict()
+    count_per_game = {}
     for play in plays:
         count_per_game.update(
             {play.name: count_per_game.get(play.name, 0) + 1})
@@ -102,7 +102,7 @@ def count_per_game_from_plays(plays):
 
 def read_plays():
     number_of_xml_files = read_xml_files()
-    plays = list()
+    plays = []
     for i in range(1, number_of_xml_files):
         add_xml_to_plays(i, plays)
     return plays
@@ -111,15 +111,14 @@ def read_plays():
 def get_first_play_date(plays):
     first_date = datetime.datetime.today()
     for play in plays:
-        if date_from_str(play.date) < first_date:
-            first_date = date_from_str(play.date)
+        first_date = min(first_date, date_from_str(play.date))
     return first_date
 
 
 def count_per_game_from_plays_since(plays, date):
-    count_per_game = dict()
+    count_per_game = {}
     for play in plays:
-        if (date_from_str(play.date) <= date):
+        if date_from_str(play.date) <= date:
             count_per_game.update(
                 {play.name: count_per_game.get(play.name, 0) + 1})
     return count_per_game
@@ -205,7 +204,7 @@ def plot_counts_and_games_and_h():
 def get_h_games(count_per_game, h):
     h_games = []
     for game in count_per_game:
-        if (count_per_game[game] >= h):
+        if count_per_game[game] >= h:
             h_games.append(game)
     return h_games
 
@@ -219,7 +218,7 @@ def print_h_index_history():
         count_per_game = count_per_game_from_plays_since(plays, date)
         # Calculate h index for this date.
         h = calc_h_index(count_per_game)
-        if (h > max_h):
+        if h > max_h:
             max_h = h
             h_games = sorted(get_h_games(count_per_game, h))
             print(f'{date.strftime("%Y-%m-%d")}, H: {h}, {len(h_games)} games: {h_games}')
@@ -230,8 +229,7 @@ def print_specific_stats(name_part):
     count_per_game_list = list(count_per_game.items())
     count_per_game_list.sort(key=lambda x: (x[0]))
     count_per_game_list.sort(key=lambda x: (x[1]), reverse=True)
-    for index in range(len(count_per_game_list)):
-        entry = count_per_game_list[index]
+    for index, entry in enumerate(count_per_game_list):
         if name_part.lower() in entry[0].lower():
             print(f'{index + 1}\t{entry[1]}\t{entry[0]}')
 
