@@ -12,9 +12,9 @@ import matplotlib.pyplot as plt
 
 
 def get_xml_page(page_number):
-    url = 'https://boardgamegeek.com/xmlapi_2/plays?username=prisonmonkeys&page='
+    url = 'https://boardgamegeek.com/xmlapi2/plays?username=yzemaze&page='
     url = url + str(page_number)
-    response = requests.get(url)
+    response = requests.get(url, timeout=10)
     return response.text
 
 
