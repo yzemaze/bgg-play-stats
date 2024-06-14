@@ -25,7 +25,7 @@ def write_to_file(str_content, file_name):
 
 
 def create_file_name(index):
-    return 'Plays_{}.xml'.format(index)
+    return f'Plays_{index:0>4}.xml'
 
 
 def get_and_write_xml(index):
@@ -81,7 +81,7 @@ class Play:
 
 
 def add_xml_to_plays(index, plays):
-    file_name = 'Plays_{}.xml'.format(index)
+    file_name = f'Plays_{index:0>4}.xml'
     tree = ET.parse(file_name)
     root = tree.getroot()
 
@@ -136,7 +136,7 @@ def print_counts(count_per_game, amount):
         print_amount = min(print_amount, len(count_per_game_list))
     for index in range(print_amount):
         entry = count_per_game_list[index]
-        print('{}\t{}\t'.format(index + 1, entry[1]) + entry[0])
+        print(f'{index+1}\t{entry[1]}\t{entry[0]}')
 
 
 def calc_total_plays(count_per_game):
@@ -222,12 +222,7 @@ def print_h_index_history():
         if (h > max_h):
             max_h = h
             h_games = sorted(get_h_games(count_per_game, h))
-            print(
-                '{}, H: {}, {} games: {}'.format(
-                    date.strftime('%Y-%m-%d'),
-                    h,
-                    len(h_games),
-                    h_games))
+            print(f'{date.strftime("%Y-%m-%d")}, H: {h}, {len(h_games)} games: {h_games}')
 
 
 def print_specific_stats(name_part):
@@ -238,20 +233,16 @@ def print_specific_stats(name_part):
     for index in range(len(count_per_game_list)):
         entry = count_per_game_list[index]
         if name_part.lower() in entry[0].lower():
-            print('{}\t{}\t{}'.format(index + 1, entry[1], entry[0]))
+            print(f'{index + 1}\t{entry[1]}\t{entry[0]}')
 
 
 def print_stats():
     plays = read_plays()
     count_per_game = count_per_game_from_plays(plays)
-    print('Current H index: {}'.format(calc_h_index(count_per_game)))
+    print(f'Current H index: {calc_h_index(count_per_game)}')
     dime_count = calc_count_more_than(count_per_game, 10)
-    print('Current # dimes: {}'.format(dime_count))
-    print(
-        'Current # fives: {}'.format(
-            calc_count_more_than(
-                count_per_game,
-                5)))
+    print(f'Current # dimes: {dime_count}')
+    print(f'Current # fives: {calc_count_more_than(count_per_game, 5)}')
     print_counts(count_per_game, dime_count)
 
 
@@ -270,7 +261,7 @@ def main():
     if get_bool_input('Update play history?'):
         update_xml_files_from_web()
         plays = read_plays()
-        print('Found {} plays.'.format(len(plays)))
+        print(f'Found {len(plays)} plays.')
 
     if get_bool_input('Plot graphs?'):
         plot_counts_and_games_and_h()
