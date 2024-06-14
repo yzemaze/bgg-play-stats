@@ -19,9 +19,9 @@ def get_xml_page(page_number):
 
 
 def write_to_file(str_content, file_name):
-    local_file = open(file_name, "w")
-    local_file.write(str_content)
-    local_file.close()
+    with open(file_name, "w", encoding="utf-8") as local_file:
+        local_file.write(str_content)
+        local_file.close()
 
 
 def create_file_name(index):
