@@ -10,242 +10,280 @@ import datetime
 import os.path
 import matplotlib.pyplot as plt
 
-def getXMLPage( pageNumber ):
-	url = 'https://boardgamegeek.com/xmlapi2/plays?username=prisonmonkeys&page='
-	url = url + str(pageNumber)
-	response = requests.get( url )
-	return response.text
 
-def writeToFile( strContent, fileName ):
-	localFile = open(fileName, "w")
-	localFile.write( strContent )
-	localFile.close()
+def get_xml_page(page_number):
+    url = 'https://boardgamegeek.com/xmlapi_2/plays?username=prisonmonkeys&page='
+    url = url + str(page_number)
+    response = requests.get(url)
+    return response.text
 
-def createFileName( index ):
-	return 'Plays_{}.xml'.format( index )
 
-def getAndWriteXML( index ):
-	fileContent = getXMLPage( index )
-	if fileContent.count( '<play id' ) > 0:
-		fileName = createFileName( index )
-		writeToFile( fileContent, fileName )
-		print( fileName + " was written" )
-		return True
-	else:
-		return False
+def write_to_file(str_content, file_name):
+    local_file = open(file_name, "w")
+    local_file.write(str_content)
+    local_file.close()
 
-def updateXMLFilesFromWeb():
-	for i in range(1,100):
-		success = getAndWriteXML(i)
-		if not success:
-			return
 
-def doesXMLExist( index ):
-	fileName = createFileName( index )
-	return os.path.exists( fileName ) and os.path.isfile( fileName )
+def create_file_name(index):
+    return 'Plays_{}.xml'.format(index)
 
-def readXMLFiles():
-	for i in range(1,100):
-		success = doesXMLExist(i)
-		if not success:
-			return i
-	return 99
 
-def dateFromStr( date ):
-	y,m,d = [int(x) for x in date.split('-')]
-	return datetime.datetime(y, m, d)
+def get_and_write_xml(index):
+    file_content = get_xml_page(index)
+    if file_content.count('<play id') > 0:
+        file_name = create_file_name(index)
+        write_to_file(file_content, file_name)
+        print(file_name + " was written")
+        return True
+    else:
+        return False
 
-def getDateListSince( start ):
-	end = datetime.datetime.today()
-	delta = end - start
-	dateList = []
-	for x in range( delta.days ):
-		dateList.append( start + datetime.timedelta( days = x ) )
-	return dateList
+
+def update_xml_files_from_web():
+    for i in range(1, 100):
+        success = get_and_write_xml(i)
+        if not success:
+            return
+
+
+def does_xml_exist(index):
+    file_name = create_file_name(index)
+    return os.path.exists(file_name) and os.path.isfile(file_name)
+
+
+def read_xml_files():
+    for i in range(1, 100):
+        success = does_xml_exist(i)
+        if not success:
+            return i
+    return 99
+
+
+def date_from_str(date):
+    y, m, d = [int(x) for x in date.split('-')]
+    return datetime.datetime(y, m, d)
+
+
+def get_date_list_since(start):
+    end = datetime.datetime.today()
+    delta = end - start
+    date_list = []
+    for x in range(delta.days):
+        date_list.append(start + datetime.timedelta(days=x))
+    return date_list
+
 
 class Play:
-	def __init__(self, date, name):
-		self.date = date
-		self.name = name
 
-def addXMLToPlays( index, plays ):
-	fileName = 'Plays_{}.xml'.format( index )
-	tree = ET.parse( fileName )
-	root = tree.getroot()
+    def __init__(self, date, name):
+        self.date = date
+        self.name = name
 
-	for child in root:
-		for i in range( int(child.attrib['quantity']) ):
-			name = child[0].attrib['name']
-			date = child.attrib['date']
-			plays.append( Play( date, name ) )
 
-def countPerGameFromPlays( plays ):
-	countPerGame = dict()
-	for play in plays:
-		countPerGame.update( { play.name: countPerGame.get(play.name, 0) + 1 } )
-	return countPerGame
+def add_xml_to_plays(index, plays):
+    file_name = 'Plays_{}.xml'.format(index)
+    tree = ET.parse(file_name)
+    root = tree.getroot()
 
-def readPlays():
-	numberOfXmlFiles = readXMLFiles()
-	plays = list()
-	for i in range( 1, numberOfXmlFiles ):
-		addXMLToPlays( i, plays )
-	return plays
+    for child in root:
+        for i in range(int(child.attrib['quantity'])):
+            name = child[0].attrib['name']
+            date = child.attrib['date']
+            plays.append(Play(date, name))
 
-def getFirstPlayDate( plays ):
-	firstDate = datetime.datetime.today();
-	for play in plays:
-		if dateFromStr( play.date ) < firstDate:
-			firstDate = dateFromStr( play.date )
-	return firstDate
 
-def countPerGameFromPlaysSince( plays, date ):
-	countPerGame = dict()
-	for play in plays:
-		if ( dateFromStr( play.date ) <= date ):
-			countPerGame.update( { play.name: countPerGame.get(play.name, 0) + 1 } )
-	return countPerGame
+def count_per_game_from_plays(plays):
+    count_per_game = dict()
+    for play in plays:
+        count_per_game.update(
+            {play.name: count_per_game.get(play.name, 0) + 1})
+    return count_per_game
 
-def printCounts( countPerGame, amount ):
-	countPerGameList = list( countPerGame.items() )
-	countPerGameList.sort( key = lambda x : (x[0]) )
-	countPerGameList.sort( key = lambda x : (x[1]), reverse = True )
-	printAmount = amount
-	if printAmount == 0:
-		printAmount = len(countPerGameList)
-	else:
-		printAmount = min(printAmount, len(countPerGameList))
-	for index in range( printAmount ):
-		entry = countPerGameList[index]
-		print('{}\t{}\t'.format( index + 1, entry[1] ) + entry[0] )
 
-def calcTotalPlays( countPerGame ):
-	totalPlays = 0
-	for game in countPerGame:
-		totalPlays += countPerGame[game]
-	return totalPlays
+def read_plays():
+    number_of_xml_files = read_xml_files()
+    plays = list()
+    for i in range(1, number_of_xml_files):
+        add_xml_to_plays(i, plays)
+    return plays
 
-def calcHIndex( countPerGame ):
-	counts = list(countPerGame.values())
-	counts.sort( reverse=True )
-	h = 0
-	for count in counts:
-		if count <= h:
-			return h
-		h += 1
-	return h
 
-def calcCountMoreThan( countPerGame, threshold ):
-	totalCount = 0
-	for count in countPerGame.values():
-		if count >= threshold:
-			totalCount += 1
-	return totalCount
+def get_first_play_date(plays):
+    first_date = datetime.datetime.today()
+    for play in plays:
+        if date_from_str(play.date) < first_date:
+            first_date = date_from_str(play.date)
+    return first_date
 
-def plotCountsAndGamesAndH():
-	plays = readPlays()
-	datesForPlot = getDateListSince( getFirstPlayDate( plays ) )
-	totalPlaysForPlot = []
-	distinctGamesForPlot = []
-	hIndicesForPlot = []
-	for date in datesForPlot:
-		# Calculate counts per game for this date.
-		# Could be done incrementally instead of from scratch every time.
-		countPerGame = countPerGameFromPlaysSince( plays, date )
-		# Calculate total plays for this date.
-		totalPlaysForPlot.append( calcTotalPlays( countPerGame ) )
-		# Calculate distinct games played for this date.
-		distinctGamesForPlot.append( len( countPerGame ) )
-		# Calculate h index for this date.
-		hIndicesForPlot.append( calcHIndex( countPerGame ) )
 
-	fig, ax1 = plt.subplots()
+def count_per_game_from_plays_since(plays, date):
+    count_per_game = dict()
+    for play in plays:
+        if (date_from_str(play.date) <= date):
+            count_per_game.update(
+                {play.name: count_per_game.get(play.name, 0) + 1})
+    return count_per_game
 
-	color = 'tab:red'
-	ax1.set_xlabel( 'time' )
-	ax1.set_ylabel( 'h index', color=color )
-	ax1.plot( datesForPlot, hIndicesForPlot, color=color )
-	ax1.tick_params( axis='y', labelcolor=color )
 
-	ax2 = ax1.twinx()
-	color = 'tab:blue'
-	ax2.set_ylabel( 'games/plays played', color=color )
-	ax2.plot( datesForPlot, totalPlaysForPlot, color=color )
-	ax2.plot( datesForPlot, distinctGamesForPlot, color='tab:green' )
-	ax2.tick_params( axis='y', labelcolor=color )
+def print_counts(count_per_game, amount):
+    count_per_game_list = list(count_per_game.items())
+    count_per_game_list.sort(key=lambda x: (x[0]))
+    count_per_game_list.sort(key=lambda x: (x[1]), reverse=True)
+    print_amount = amount
+    if print_amount == 0:
+        print_amount = len(count_per_game_list)
+    else:
+        print_amount = min(print_amount, len(count_per_game_list))
+    for index in range(print_amount):
+        entry = count_per_game_list[index]
+        print('{}\t{}\t'.format(index + 1, entry[1]) + entry[0])
 
-	fig.tight_layout()
-	plt.title( 'BGG history' )
-	plt.show()
 
-def getHGames( countPerGame, h ):
-	hGames = []
-	for game in countPerGame:
-		if ( countPerGame[game] >= h ):
-			hGames.append( game )
-	return hGames
+def calc_total_plays(count_per_game):
+    total_plays = 0
+    for game in count_per_game:
+        total_plays += count_per_game[game]
+    return total_plays
 
-def printHIndexHistory():
-	plays = readPlays()
-	maxH = 0
-	for date in getDateListSince( getFirstPlayDate( plays ) ):
-		# Calculate counts per game for this date.
-		# Could be done incrementally instead of from scratch every time.
-		countPerGame = countPerGameFromPlaysSince( plays, date )
-		# Calculate h index for this date.
-		h = calcHIndex( countPerGame )
-		if ( h > maxH ):
-			maxH = h
-			hGames = getHGames( countPerGame, h )
-			hGames.sort()
-			print( '{}, H: {}, {} games: {}'.format( date.strftime('%Y-%m-%d'), h, len(hGames), hGames ) )
 
-def printSpecificStats( namePart ):
-	countPerGame = countPerGameFromPlays( readPlays() )
-	countPerGameList = list( countPerGame.items() )
-	countPerGameList.sort( key = lambda x : (x[0]) )
-	countPerGameList.sort( key = lambda x : (x[1]), reverse = True )
-	for index in range( len(countPerGameList) ):
-		entry = countPerGameList[index]
-		if namePart.lower() in entry[0].lower():
-			print( '{}\t{}\t{}'.format( index + 1, entry[1], entry[0] ) )
+def calc_h_index(count_per_game):
+    counts = list(count_per_game.values())
+    counts.sort(reverse=True)
+    h = 0
+    for count in counts:
+        if count <= h:
+            return h
+        h += 1
+    return h
 
-def printStats():
-	plays = readPlays()
-	countPerGame = countPerGameFromPlays( plays )
-	print( 'Current H index: {}'.format( calcHIndex( countPerGame ) ) )
-	dimeCount = calcCountMoreThan( countPerGame, 10 )
-	print( 'Current # dimes: {}'.format( dimeCount ) )
-	print( 'Current # fives: {}'.format( calcCountMoreThan( countPerGame, 5 ) ) )
-	printCounts( countPerGame, dimeCount )
 
-def getBoolInput( question ):
-	inputText = question + ' (Y/y) for yes. --> '
-	answer = input( inputText )
-	return answer.lower() == 'y'
+def calc_count_more_than(count_per_game, threshold):
+    total_count = 0
+    for count in count_per_game.values():
+        if count >= threshold:
+            total_count += 1
+    return total_count
 
-def getStringInput( question ):
-	inputText = question + ' --> '
-	return input( inputText )
+
+def plot_counts_and_games_and_h():
+    plays = read_plays()
+    dates_for_plot = get_date_list_since(get_first_play_date(plays))
+    total_plays_for_plot = []
+    distinct_games_for_plot = []
+    h_indices_for_plot = []
+    for date in dates_for_plot:
+        # Calculate counts per game for this date.
+        # Could be done incrementally instead of from scratch every time.
+        count_per_game = count_per_game_from_plays_since(plays, date)
+        # Calculate total plays for this date.
+        total_plays_for_plot.append(calc_total_plays(count_per_game))
+        # Calculate distinct games played for this date.
+        distinct_games_for_plot.append(len(count_per_game))
+        # Calculate h index for this date.
+        h_indices_for_plot.append(calc_h_index(count_per_game))
+
+    fig, ax_1 = plt.subplots()
+
+    color = 'tab:red'
+    ax_1.set_xlabel('time')
+    ax_1.set_ylabel('h index', color=color)
+    ax_1.plot(dates_for_plot, h_indices_for_plot, color=color)
+    ax_1.tick_params(axis='y', labelcolor=color)
+
+    ax_2 = ax_1.twinx()
+    color = 'tab:blue'
+    ax_2.set_ylabel('games/plays played', color=color)
+    ax_2.plot(dates_for_plot, total_plays_for_plot, color=color)
+    ax_2.plot(dates_for_plot, distinct_games_for_plot, color='tab:green')
+    ax_2.tick_params(axis='y', labelcolor=color)
+
+    fig.tight_layout()
+    plt.title('BGG history')
+    plt.show()
+
+
+def get_h_games(count_per_game, h):
+    h_games = []
+    for game in count_per_game:
+        if (count_per_game[game] >= h):
+            h_games.append(game)
+    return h_games
+
+
+def print_h_index_history():
+    plays = read_plays()
+    max_h = 0
+    for date in get_date_list_since(get_first_play_date(plays)):
+        # Calculate counts per game for this date.
+        # Could be done incrementally instead of from scratch every time.
+        count_per_game = count_per_game_from_plays_since(plays, date)
+        # Calculate h index for this date.
+        h = calc_h_index(count_per_game)
+        if (h > max_h):
+            max_h = h
+            h_games = sorted(get_h_games(count_per_game, h))
+            print(
+                '{}, H: {}, {} games: {}'.format(
+                    date.strftime('%Y-%m-%d'),
+                    h,
+                    len(h_games),
+                    h_games))
+
+
+def print_specific_stats(name_part):
+    count_per_game = count_per_game_from_plays(read_plays())
+    count_per_game_list = list(count_per_game.items())
+    count_per_game_list.sort(key=lambda x: (x[0]))
+    count_per_game_list.sort(key=lambda x: (x[1]), reverse=True)
+    for index in range(len(count_per_game_list)):
+        entry = count_per_game_list[index]
+        if name_part.lower() in entry[0].lower():
+            print('{}\t{}\t{}'.format(index + 1, entry[1], entry[0]))
+
+
+def print_stats():
+    plays = read_plays()
+    count_per_game = count_per_game_from_plays(plays)
+    print('Current H index: {}'.format(calc_h_index(count_per_game)))
+    dime_count = calc_count_more_than(count_per_game, 10)
+    print('Current # dimes: {}'.format(dime_count))
+    print(
+        'Current # fives: {}'.format(
+            calc_count_more_than(
+                count_per_game,
+                5)))
+    print_counts(count_per_game, dime_count)
+
+
+def get_bool_input(question):
+    input_text = question + ' (Y/y) for yes. --> '
+    answer = input(input_text)
+    return answer.lower() == 'y'
+
+
+def get_string_input(question):
+    input_text = question + ' --> '
+    return input(input_text)
+
 
 def main():
-	if getBoolInput( 'Update play history?' ):
-		updateXMLFilesFromWeb()
-		plays = readPlays()
-		print( 'Found {} plays.'.format( len(plays) ) )
+    if get_bool_input('Update play history?'):
+        update_xml_files_from_web()
+        plays = read_plays()
+        print('Found {} plays.'.format(len(plays)))
 
-	if getBoolInput( 'Plot graphs?' ):
-		plotCountsAndGamesAndH()
+    if get_bool_input('Plot graphs?'):
+        plot_counts_and_games_and_h()
 
-	if getBoolInput( 'Print H-index history?' ):
-		printHIndexHistory()
+    if get_bool_input('Print H-index history?'):
+        print_h_index_history()
 
-	if getBoolInput( 'Print stats?' ):
-		printStats()
+    if get_bool_input('Print stats?'):
+        print_stats()
 
-	while getBoolInput( 'Print specific stat?' ):
-		printSpecificStats( getStringInput( 'Game name?' ) )
-		
+    while get_bool_input('Print specific stat?'):
+        print_specific_stats(get_string_input('Game name?'))
+
 
 if __name__ == "__main__":
-	main()
+    main()
