@@ -4,10 +4,10 @@
 # install new modules with
 #  ~/Workspaces/BGG statistics$ pipenv install matplotlib
 
-import requests
 import xml.etree.ElementTree as ET
 import datetime
 import os.path
+import requests
 import matplotlib.pyplot as plt
 
 
@@ -29,21 +29,23 @@ def create_file_name(index):
 
 
 def get_and_write_xml(index):
+    if does_xml_exist(index):
+        return True
     file_content = get_xml_page(index)
     if file_content.count('<play id') > 0:
         file_name = create_file_name(index)
         write_to_file(file_content, file_name)
         print(file_name + " was written")
         return True
-    else:
-        return False
+    return False
 
 
 def update_xml_files_from_web():
-    for i in range(1, 100):
+    i = 1
+    success = get_and_write_xml(i)
+    while success:
+        i = i + 1
         success = get_and_write_xml(i)
-        if not success:
-            return
 
 
 def does_xml_exist(index):
@@ -52,11 +54,12 @@ def does_xml_exist(index):
 
 
 def read_xml_files():
-    for i in range(1, 100):
+    i = 1
+    success = does_xml_exist(i)
+    while success:
+        i = i + 1
         success = does_xml_exist(i)
-        if not success:
-            return i
-    return 99
+    return i - 1
 
 
 def date_from_str(date):
@@ -257,6 +260,7 @@ def get_string_input(question):
 
 def main():
     if get_bool_input('Update play history?'):
+        # TODO implement overwrite
         update_xml_files_from_web()
         plays = read_plays()
         print(f'Found {len(plays)} plays.')
